@@ -3,16 +3,44 @@ import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import BlogForm from "./components/BlogForm";
+import NotificationBar from "./components/NotificationBar";
+import LoginForm from "./components/LoginForm";
+
+const NotificationType = Object.freeze({
+  SUCCESS: "success",
+  ERROR: "error",
+  INFO: "info",
+});
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [newBlog, setNewBlog] = useState({ title: "", author: "", url: "" });
+  const [notification, setNotification] = useState({ message: "", type: NotificationType.SUCCESS });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
 
+  const setSuccessNotification = (message) => {
+    setNotification({ message, type: NotificationType.SUCCESS });
+    setTimeout(() => {
+      setNotification({ message: "", type: NotificationType.SUCCESS });
+    }, 5000);
+  };
+  const setErrorNotification = (message) => {
+    setNotification({ message, type: NotificationType.ERROR });
+    setTimeout(() => {
+      setNotification({ message: "", type: NotificationType.ERROR });
+    }, 5000);
+  };
+
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    const fetchBlogs = async () => {
+      setNotification({ message: "Loading blogs...", type: NotificationType.INFO });
+      const blogs = await blogService.getAll();
+      setSuccessNotification("Blogs loaded");
+      setBlogs(blogs);
+    };
+    fetchBlogs();
   }, []);
 
   useEffect(() => {
@@ -30,11 +58,13 @@ const App = () => {
     try {
       const loginData = await loginService.login({ username, password });
       window.localStorage.setItem("loggedUser", JSON.stringify(loginData));
+      setSuccessNotification("Logged in successfully as " + loginData.name);
       setUser(loginData);
       setUsername("");
       setPassword("");
     } catch (error) {
       console.error("error logging in:", error);
+      setErrorNotification("Wrong username or password");
     }
   };
 
@@ -45,10 +75,13 @@ const App = () => {
 
   const handleCreateBlog = async (event) => {
     event.preventDefault();
-    const response = await blogService.create(newBlog, user.token);
-    if (response.status === 201) {
+    try {
+      const response = await blogService.create(newBlog, user.token);
       setBlogs(blogs.concat(response.data));
+      setSuccessNotification(`A new blog ${newBlog.title} by ${newBlog.author} added`);
       setNewBlog({ title: "", author: "", url: "" });
+    } catch (error) {
+      setErrorNotification("Failed to create blog: " + error.response.data.error);
     }
   };
 
@@ -61,27 +94,20 @@ const App = () => {
     return (
       <div>
         <h2>Log in</h2>
-        <form onSubmit={handleLogin}>
-          <div>
-            username <input type="text" value={username} name="Username" onChange={({ target }) => setUsername(target.value)} />
-          </div>
-          <div>
-            password <input type="password" value={password} name="Password" onChange={({ target }) => setPassword(target.value)} />
-          </div>
-          <button type="submit">login</button>
-        </form>
+        <NotificationBar notification={notification} />
+        <LoginForm onSubmit={handleLogin} username={username} password={password} setUsername={setUsername} setPassword={setPassword} />
       </div>
     );
   }
-
   return (
     <div>
       <h2>blogs</h2>
+      <NotificationBar notification={notification} />
       <div style={{ paddingBottom: "10px" }}>
         Logged in as {user.name}
         <button onClick={handleLogout}>logout</button>
       </div>
-      <BlogForm onSubmit={handleCreateBlog} onChange={handleBlogChange} />
+      <BlogForm onSubmit={handleCreateBlog} onChange={handleBlogChange} newBlog={newBlog} />
       {blogs.map((blog) => (
         <Blog key={blog.id} blog={blog} />
       ))}
