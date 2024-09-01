@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import BlogForm from "./components/BlogForm";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
+  const [newBlog, setNewBlog] = useState({ title: "", author: "", url: "" });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
@@ -41,6 +43,20 @@ const App = () => {
     setUser(null);
   };
 
+  const handleCreateBlog = async (event) => {
+    event.preventDefault();
+    const response = await blogService.create(newBlog, user.token);
+    if (response.status === 201) {
+      setBlogs(blogs.concat(response.data));
+      setNewBlog({ title: "", author: "", url: "" });
+    }
+  };
+
+  const handleBlogChange = (event) => {
+    const { name, value } = event.target;
+    setNewBlog({ ...newBlog, [name]: value });
+  };
+
   if (user === null) {
     return (
       <div>
@@ -65,7 +81,7 @@ const App = () => {
         Logged in as {user.name}
         <button onClick={handleLogout}>logout</button>
       </div>
-
+      <BlogForm onSubmit={handleCreateBlog} onChange={handleBlogChange} />
       {blogs.map((blog) => (
         <Blog key={blog.id} blog={blog} />
       ))}
