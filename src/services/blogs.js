@@ -6,12 +6,22 @@ const getAll = async () => {
   return response.data;
 };
 
-const create = async (newObject, token) => {
+const create = async (newBlog, token) => {
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
-  const response = await axios.post(baseUrl, newObject, config);
+  const response = await axios.post(baseUrl, newBlog, config);
   return response;
 };
 
-export default { getAll, create };
+const update = async (updatedBlog, token) => {
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
+  // The backend expects the user field to just be an id.
+  updatedBlog.user = updatedBlog.user.id;
+  const response = await axios.put(`${baseUrl}/${updatedBlog.id}`, updatedBlog, config);
+  return response;
+};
+
+export default { getAll, create, update };
