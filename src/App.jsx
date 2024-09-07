@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import BlogForm from "./components/BlogForm";
 import NotificationBar from "./components/NotificationBar";
 import LoginForm from "./components/LoginForm";
+import Togglable from "./components/Togglable";
 
 const NotificationType = Object.freeze({
   SUCCESS: "success",
@@ -14,11 +15,12 @@ const NotificationType = Object.freeze({
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [newBlog, setNewBlog] = useState({ title: "", author: "", url: "" });
   const [notification, setNotification] = useState({ message: "", type: NotificationType.SUCCESS });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
+
+  const blogFormRef = useRef();
 
   const setSuccessNotification = (message) => {
     setNotification({ message, type: NotificationType.SUCCESS });
@@ -53,8 +55,6 @@ const App = () => {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    console.log("logging in with", username, password);
-
     try {
       const loginData = await loginService.login({ username, password });
       window.localStorage.setItem("loggedUser", JSON.stringify(loginData));
@@ -73,21 +73,15 @@ const App = () => {
     setUser(null);
   };
 
-  const handleCreateBlog = async (event) => {
-    event.preventDefault();
+  const createBlog = async (newBlog) => {
     try {
       const response = await blogService.create(newBlog, user.token);
       setBlogs(blogs.concat(response.data));
       setSuccessNotification(`A new blog ${newBlog.title} by ${newBlog.author} added`);
-      setNewBlog({ title: "", author: "", url: "" });
+      blogFormRef.current.toggleVisibility();
     } catch (error) {
       setErrorNotification("Failed to create blog: " + error.response.data.error);
     }
-  };
-
-  const handleBlogChange = (event) => {
-    const { name, value } = event.target;
-    setNewBlog({ ...newBlog, [name]: value });
   };
 
   if (user === null) {
@@ -107,7 +101,9 @@ const App = () => {
         Logged in as {user.name}
         <button onClick={handleLogout}>logout</button>
       </div>
-      <BlogForm onSubmit={handleCreateBlog} onChange={handleBlogChange} newBlog={newBlog} />
+      <Togglable buttonLabel="new blog" ref={blogFormRef}>
+        <BlogForm createBlog={createBlog} />
+      </Togglable>
       {blogs.map((blog) => (
         <Blog key={blog.id} blog={blog} />
       ))}
