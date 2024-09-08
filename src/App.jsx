@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { jwtDecode } from "jwt-decode";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
@@ -57,13 +58,14 @@ const App = () => {
     event.preventDefault();
     try {
       const loginData = await loginService.login({ username, password });
+      const decodedToken = jwtDecode(loginData.token);
+      loginData.id = decodedToken.id;
       window.localStorage.setItem("loggedUser", JSON.stringify(loginData));
       setSuccessNotification("Logged in successfully as " + loginData.name);
       setUser(loginData);
       setUsername("");
       setPassword("");
     } catch (error) {
-      console.error("error logging in:", error);
       setErrorNotification("Wrong username or password");
     }
   };
@@ -88,13 +90,25 @@ const App = () => {
     try {
       const updatedBlog = { ...blog, likes: blog.likes + 1 };
       const response = await blogService.update(updatedBlog, user.token);
-
       // Update the blog in the state.
       setBlogs(blogs.map((blog) => (blog.id === response.data.id ? { ...blog, likes: response.data.likes } : blog)));
       setSuccessNotification(`Blog ${updatedBlog.title} liked!`);
     } catch (error) {
       console.error("error liking blog:", error);
       setErrorNotification("Failed to like blog: " + error.response.data.error);
+    }
+  };
+
+  const deleteBlog = async (deletedBlog) => {
+    console.log("deleting blog", deletedBlog);
+    try {
+      await blogService.deleteBlog(deletedBlog.id, user.token);
+      // Remove the blog from the state.
+      setBlogs(blogs.filter((blog) => blog.id !== deletedBlog.id));
+      setSuccessNotification(`Blog ${deletedBlog.title} deleted!`);
+    } catch (error) {
+      console.error("error deleting blog:", error);
+      setErrorNotification("Failed to delete blog: " + error.response);
     }
   };
 
@@ -105,7 +119,7 @@ const App = () => {
         <NotificationBar notification={notification} />
         <LoginForm onSubmit={handleLogin} username={username} password={password} setUsername={setUsername} setPassword={setPassword} />
       </div>
-    );
+    ); // TODO: Clean up the login form.
   }
   return (
     <div>
@@ -121,7 +135,7 @@ const App = () => {
       {blogs
         .sort((l, r) => r.likes - l.likes) // Sort in descending order.
         .map((blog) => (
-          <Blog key={blog.id} blog={blog} handleLike={addLikeToBlog} />
+          <Blog key={blog.id} blog={blog} handleLike={addLikeToBlog} handleDelete={deleteBlog} user={user} />
         ))}
     </div>
   );
