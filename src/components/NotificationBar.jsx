@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/NotificationBar.css";
+import PropTypes from "prop-types";
 
 const NotificationBar = ({ notification }) => {
   if (!notification.message) {
@@ -10,6 +11,10 @@ const NotificationBar = ({ notification }) => {
       <p>{notification.message}</p>
     </div>
   );
+};
+
+NotificationBar.propTypes = {
+  notification: PropTypes.object.isRequired,
 };
 
 export default NotificationBar;
