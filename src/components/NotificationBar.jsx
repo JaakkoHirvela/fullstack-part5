@@ -1,4 +1,3 @@
-import React from "react";
 import "../styles/NotificationBar.css";
 import PropTypes from "prop-types";
 
