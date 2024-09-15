@@ -11,8 +11,8 @@ const Blog = ({ blog, handleLike, handleDelete, user }) => {
   };
   const [visible, setVisible] = useState(false);
 
-  const hideWhenVisible = { display: visible ? "none" : "", class: "togglableContent" };
-  const showWhenVisible = { display: visible ? "" : "none", class: "togglableContent" };
+  const hideWhenVisible = { display: visible ? "none" : "" };
+  const showWhenVisible = { display: visible ? "" : "none" };
 
   const onDeleteClicked = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)) handleDelete(blog);
@@ -32,7 +32,7 @@ const Blog = ({ blog, handleLike, handleDelete, user }) => {
           hide
         </button>
       </div>
-      <div style={showWhenVisible}>
+      <div style={showWhenVisible} className="togglableContent">
         <p>{blog.url}</p>
         <p>
           likes {blog.likes} <button onClick={() => handleLike(blog)}>like</button>
