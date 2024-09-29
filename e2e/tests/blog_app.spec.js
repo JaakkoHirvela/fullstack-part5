@@ -1,4 +1,5 @@
 const { test, expect, beforeEach, describe } = require("@playwright/test");
+const { loginWith } = require("./helper");
 
 describe("Blogs app", () => {
   beforeEach(async ({ page, request }) => {
@@ -24,10 +25,16 @@ describe("Blogs app", () => {
     await expect(usernameInput).toBeVisible();
     await expect(passwordInput).toBeVisible();
   });
-  test("front page can be opened", async ({ page }) => {
-    await page.goto("/");
 
-    const locator = await page.getByText("Blogs");
-    await expect(locator).toBeVisible();
+  describe("Login", () => {
+    test("succeeds with correct credentials", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await expect(page.getByText("Logged in successfully as Teppo Testi")).toBeVisible();
+    });
+
+    test("fails with wrong credentials", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "wronk");
+      await expect(page.getByText("wrong username or password")).toBeVisible();
+    });
   });
 });
