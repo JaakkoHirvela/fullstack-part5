@@ -4,10 +4,10 @@ const LoginForm = ({ onSubmit, username, password, setUsername, setPassword }) =
   return (
     <form onSubmit={onSubmit}>
       <div>
-        username <input type="text" value={username} name="Username" onChange={({ target }) => setUsername(target.value)} />
+        username <input type="text" value={username} name="username" data-testid="username" onChange={({ target }) => setUsername(target.value)} />
       </div>
       <div>
-        password <input type="password" value={password} name="Password" onChange={({ target }) => setPassword(target.value)} />
+        password <input type="password" value={password} name="password" data-testid="password" onChange={({ target }) => setPassword(target.value)} />
       </div>
       <button type="submit">login</button>
     </form>
