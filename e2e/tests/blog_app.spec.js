@@ -12,6 +12,13 @@ describe("Blogs app", () => {
         password: "salasana",
       },
     });
+    await request.post("/api/users", {
+      data: {
+        name: "Väärä Teppo",
+        username: "wrongteuvo",
+        password: "salasana",
+      },
+    });
     await page.goto("/");
   });
 
@@ -49,16 +56,33 @@ describe("Blogs app", () => {
       await createBlog(page, "Test blog", "Test Author", "http://test.com");
 
       // View the details
-      await page.getByText("view").click(); 
-      
+      await page.getByText("view").click();
+
       // Check that the likes are 0
-      await expect(page.getByText("likes 0")).toBeVisible(); 
-      
+      await expect(page.getByText("likes 0")).toBeVisible();
+
       // Like the blog
-      await page.getByText("like").click(); 
-      
+      await page.getByText("like").click();
+
       // Check that the likes are now 1
-      await expect(page.getByText("likes 1")).toBeVisible(); 
+      await expect(page.getByText("likes 1")).toBeVisible();
+    });
+
+    test("A blog can be deleted by its creator", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await createBlog(page, "Test blog", "Test Author", "http://test.com");
+
+      // View the details
+      await page.getByText("view").click();
+
+      // Delete the blog
+      page.on("dialog", async (dialog) => {
+        await dialog.accept();
+      });
+      await page.getByText("remove").click();
+
+      // Check that the blog is not visible
+      await expect(page.getByText("Test blog Test Author")).not.toBeVisible();
     });
   });
 });

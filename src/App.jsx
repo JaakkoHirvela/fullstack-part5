@@ -78,6 +78,9 @@ const App = () => {
   const createBlog = async (newBlog) => {
     try {
       const response = await blogService.create(newBlog, user.token);
+
+      // Append the user data before adding the blog to the state.
+      response.data.user = { id: user.id, name: user.name, username: user.username };
       setBlogs(blogs.concat(response.data));
       setSuccessNotification(`A new blog ${newBlog.title} by ${newBlog.author} added`);
       blogFormRef.current.toggleVisibility();
