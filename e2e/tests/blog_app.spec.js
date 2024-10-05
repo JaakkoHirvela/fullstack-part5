@@ -37,4 +37,18 @@ describe("Blogs app", () => {
       await expect(page.getByText("wrong username or password")).toBeVisible();
     });
   });
+
+  describe("When logged in", () => {
+    test("A blog can be created", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await page.getByText("new blog").click();
+      await page.getByTestId("title").fill("Test blog");
+      await page.getByTestId("author").fill("Test Author");
+      await page.getByTestId("url").fill("http://test.com");
+      await page.getByRole("button", { name: "create" }).click();
+
+      await expect(page.getByText("Test blog Test Author")).toBeVisible();
+    });
+
+  });
 });
