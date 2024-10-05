@@ -68,7 +68,7 @@ describe("Blogs app", () => {
       await expect(page.getByText("likes 1")).toBeVisible();
     });
 
-    test("A blog can be deleted by its creator", async ({ page }) => {
+    test("A blog can be deleted", async ({ page }) => {
       await loginWith(page, "testiteuvo", "salasana");
       await createBlog(page, "Test blog", "Test Author", "http://test.com");
 
@@ -83,6 +83,29 @@ describe("Blogs app", () => {
 
       // Check that the blog is not visible
       await expect(page.getByText("Test blog Test Author")).not.toBeVisible();
+    });
+
+    test("Only the blog creator sees the remove button", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await createBlog(page, "Test blog", "Test Author", "http://test.com");
+
+      // View the details
+      await page.getByText("view").click();
+
+      // Check that the remove button is visible
+      await expect(page.getByText("remove")).toBeVisible();
+
+      // Logout
+      await page.getByText("logout").click();
+
+      // Login with another user
+      await loginWith(page, "wrongteuvo", "salasana");
+
+      // View the details
+      await page.getByText("view").click();
+
+      // Check that the remove button is not visible
+      await expect(page.getByText("remove")).not.toBeVisible();
     });
   });
 });
