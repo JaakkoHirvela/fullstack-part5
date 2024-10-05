@@ -1,10 +1,9 @@
 const { test, expect, beforeEach, describe } = require("@playwright/test");
-const { loginWith } = require("./helper");
+const { loginWith, createBlog } = require("./helper");
 
 describe("Blogs app", () => {
   beforeEach(async ({ page, request }) => {
     const response = await request.post("/api/testing/reset");
-    console.log("rsponse url", response.url());
     await expect(response.status()).toBe(204);
     await request.post("/api/users", {
       data: {
@@ -13,7 +12,6 @@ describe("Blogs app", () => {
         password: "salasana",
       },
     });
-
     await page.goto("/");
   });
 
@@ -41,14 +39,26 @@ describe("Blogs app", () => {
   describe("When logged in", () => {
     test("A blog can be created", async ({ page }) => {
       await loginWith(page, "testiteuvo", "salasana");
-      await page.getByText("new blog").click();
-      await page.getByTestId("title").fill("Test blog");
-      await page.getByTestId("author").fill("Test Author");
-      await page.getByTestId("url").fill("http://test.com");
-      await page.getByRole("button", { name: "create" }).click();
+      await createBlog(page, "Test blog", "Test Author", "http://test.com");
 
       await expect(page.getByText("Test blog Test Author")).toBeVisible();
     });
 
+    test("A blog can be liked", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await createBlog(page, "Test blog", "Test Author", "http://test.com");
+
+      // View the details
+      await page.getByText("view").click(); 
+      
+      // Check that the likes are 0
+      await expect(page.getByText("likes 0")).toBeVisible(); 
+      
+      // Like the blog
+      await page.getByText("like").click(); 
+      
+      // Check that the likes are now 1
+      await expect(page.getByText("likes 1")).toBeVisible(); 
+    });
   });
 });
