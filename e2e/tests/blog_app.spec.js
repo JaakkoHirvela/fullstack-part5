@@ -107,5 +107,45 @@ describe("Blogs app", () => {
       // Check that the remove button is not visible
       await expect(page.getByText("remove")).not.toBeVisible();
     });
+
+    test("Blogs are ordered by likes", async ({ page }) => {
+      await loginWith(page, "testiteuvo", "salasana");
+      await createBlog(page, "Test blog 1", "Test Author", "http://test.com");
+      await createBlog(page, "Test blog 2", "Test Author", "http://test.com");
+      await createBlog(page, "Test blog 3", "Test Author", "http://test.com");
+
+      // Wait for the blogs to be fully visible before proceeding
+      await expect(page.getByText("Test blog 3 Test Author")).toBeVisible();
+
+      // View the details for all blogs
+      const viewButtons = await page.getByText("view").all();
+      expect(viewButtons.length).toBe(3);
+      for (const viewButton of viewButtons) {
+        await viewButton.click();
+      }
+
+      // Like the blogs
+      const likeButtons = await page.getByText("like").all();
+
+      // 3 likes for the second blog. Make sure that each like is registered.
+      await likeButtons[1].click(); 
+      await expect(page.getByText("likes 1")).toBeVisible();
+      await likeButtons[1].click();
+      await expect(page.getByText("likes 2")).toBeVisible();
+      await likeButtons[1].click();
+      await expect(page.getByText("likes 3")).toBeVisible();
+      
+      // 1 like for one of the other blogs.
+      await likeButtons[2].click(); 
+      await expect(page.getByText("likes 1")).toBeVisible();
+
+      // Check that the blogs are ordered correctly
+      const blogs = await page.locator(".blog").all();
+      expect(blogs.length).toBe(3);
+
+      expect(await blogs[0].innerText()).toContain("likes 3");
+      expect(await blogs[1].innerText()).toContain("likes 1");
+      expect(await blogs[2].innerText()).toContain("likes 0");
+    });
   });
 });
